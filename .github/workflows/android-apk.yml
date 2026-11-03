@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 60
     defaults:
       run:
-        working-directory: mobile
+        working-directory: yt-alarm-clock/mobile
 
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: mobile/package-lock.json
+          cache-dependency-path: yt-alarm-clock/mobile/package-lock.json
 
       - uses: actions/setup-java@v4
         with:
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: yt-alarm-apk
-          path: mobile/out/
+          path: yt-alarm-clock/mobile/out/
           retention-days: 90
 
       - name: Publish GitHub Release (tag builds only)
@@ -97,8 +97,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            mobile/out/yt-alarm-*.apk
-            mobile/out/SHA256SUMS.txt
+            yt-alarm-clock/mobile/out/yt-alarm-*.apk
+            yt-alarm-clock/mobile/out/SHA256SUMS.txt
           body: |
             Installable Android APK for YT Alarm Clock.
 
