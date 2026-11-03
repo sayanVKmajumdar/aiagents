@@ -33,6 +33,14 @@ inject them at build time (see [Native layer](#native-layer-what-the-plugins-do)
 
 ## Quick start (local)
 
+```bash
+cd yt-alarm-clock
+chmod +x setup.sh
+./setup.sh            # installs both halves and runs every test
+```
+
+Or by hand:
+
 ### Backend
 
 ```bash
@@ -276,6 +284,9 @@ run `npx expo prebuild -p android --clean` and check the build log for
 
 ```text
 yt-alarm-clock/
+├── setup.sh                 one-command install + verify (backend & mobile)
+├── QUICKSTART.txt           the 2-minute version of this file
+├── SETUP.md                 full walkthrough + troubleshooting table
 ├── backend/
 │   ├── Dockerfile            python:3.11-slim + ffmpeg + deno
 │   ├── fly.toml              Fly.io alternative
@@ -283,6 +294,7 @@ yt-alarm-clock/
 │   ├── requirements.txt      pinned runtime deps
 │   ├── requirements-dev.txt  + pytest/httpx
 │   ├── server.py             FastAPI app
+│   ├── selfcheck.py          end-to-end readiness probe (local + deployed)
 │   └── tests/test_server.py  7 offline tests
 └── mobile/
     ├── App.js                shell: list, FAB, sheets, ringing modal

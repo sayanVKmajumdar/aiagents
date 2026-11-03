@@ -1,0 +1,91 @@
+================================================================
+ YT ALARM CLOCK — QUICKSTART
+ Wake up to a random song from your YouTube Music library.
+================================================================
+
+This folder is the complete project (backend + mobile app). Nothing is
+generated at download time; everything is source you can build and audit.
+
+----------------------------------------------------------------
+ 0. ONE COMMAND
+----------------------------------------------------------------
+  cd yt-alarm-clock
+  chmod +x setup.sh
+  ./setup.sh                 # installs backend + mobile deps, runs all tests
+
+----------------------------------------------------------------
+ 1. PROVE THE BACKEND WORKS  (needs a normal internet connection)
+----------------------------------------------------------------
+  cd backend
+  ../backend/.venv/bin/python selfcheck.py
+
+  Every row must say PASS. If "youtube music reachable" or
+  "yt-dlp stream resolution" FAIL, stop — the app cannot fetch audio
+  until that is fixed.
+
+----------------------------------------------------------------
+ 2. LINK YOUR YOUTUBE MUSIC ACCOUNT
+----------------------------------------------------------------
+  cd .. && ./setup.sh oauth          # opens Google, writes backend/oauth.json
+
+  oauth.json is a Google refresh token. Never commit it or share it.
+
+----------------------------------------------------------------
+ 3. RUN THE API
+----------------------------------------------------------------
+  ./setup.sh start                   # http://localhost:8000/docs
+
+----------------------------------------------------------------
+ 4. DEPLOY IT (so your phone can reach it)
+----------------------------------------------------------------
+  render.yaml blueprint  ->  Render: New > Blueprint > pick this repo
+  fly.toml              ->  fly launch --no-deploy --copy-config && fly deploy
+
+  Paste the oauth.json contents into the YTMUSIC_OAUTH_JSON env var.
+  Then verify from your machine:
+
+    cd backend
+    .venv/bin/python selfcheck.py --url https://YOUR-URL --api-key YOUR_KEY
+
+  The row "stream URL serves audio" is the one that matters.
+
+----------------------------------------------------------------
+ 5. BUILD THE ANDROID APK  (Expo Go will NOT work — native flags needed)
+----------------------------------------------------------------
+  cd mobile
+  npm install
+  npm test                        # 7 plugin tests
+  npx expo prebuild -p android --clean
+  eas login && eas init
+  eas build -p android --profile preview
+
+  Or locally with Android Studio + JDK 17:
+  cd android && ./gradlew assembleDebug
+
+----------------------------------------------------------------
+ 6. ON THE PHONE
+----------------------------------------------------------------
+  Install the APK, open it, tap the gear icon, paste your backend URL
+  and API key, then Test connection (must be green).
+
+  Android Settings > Apps > YT Alarm:
+    Battery .................. Unrestricted
+    Alarms & reminders ....... Allowed
+    Display over other apps .. Allowed
+    Notifications ............ Allowed
+  Xiaomi/Redmi/Poco: Autostart ON, battery "No restrictions".
+
+----------------------------------------------------------------
+ 7. TEST
+----------------------------------------------------------------
+  Add an alarm 2 minutes from now, lock the phone, wait.
+  The screen should light up by itself and the song should start.
+
+  Full instructions, troubleshooting table and known limits:
+    SETUP.md
+    README.md
+
+================================================================
+ Personal use only. ytmusicapi / yt-dlp operate outside YouTube's
+ Terms of Service — do not redistribute streams.
+================================================================
