@@ -1,0 +1,91 @@
+{
+  "expo": {
+    "name": "YT Alarm",
+    "slug": "yt-alarm-clock",
+    "version": "1.0.0",
+    "scheme": "ytalarm",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#09090b",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#09090b"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "androidStatusBar": {
+      "backgroundColor": "#09090b",
+      "barStyle": "light-content"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ytalarm.app",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio",
+          "fetch"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.ytalarm.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#09090b"
+      },
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.WAKE_LOCK",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM",
+        "android.permission.USE_FULL_SCREEN_INTENT",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.VIBRATE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.INTERNET",
+        "android.permission.DISABLE_KEYGUARD",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "./plugins/withAndroidAlarmFlags.js",
+        {
+          "showWhenLocked": true,
+          "removePermissions": [
+            "android.permission.RECORD_AUDIO"
+          ]
+        }
+      ],
+      [
+        "./plugins/withFullScreenAlarmNotification.js",
+        {
+          "fullScreenIntent": true,
+          "showWhenLocked": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#FF0033",
+          "sounds": []
+        }
+      ],
+      "expo-splash-screen"
+    ]
+  }
+}

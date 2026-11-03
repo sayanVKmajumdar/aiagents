@@ -1,0 +1,26 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+# Deploy with: Render Dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: yt-alarm-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8000
+      # Paste the contents of your local `oauth.json` here (sync: false keeps it
+      # out of git and prompts you in the Render UI).
+      - key: YTMUSIC_OAUTH_JSON
+        sync: false
+      # Optional: lock the API down so strangers can't burn your YouTube quota.
+      - key: ALARM_API_KEY
+        generateValue: true
+      - key: YTDLP_PLAYER_CLIENTS
+        value: android ios tv_embedded
+      - key: CHARTS_COUNTRY
+        value: US

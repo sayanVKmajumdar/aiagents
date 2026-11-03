@@ -1,0 +1,53 @@
+# --- Python / backend -------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Credentials: NEVER commit these. oauth.json is a Google refresh token.
+oauth.json
+browser.json
+headers_auth.json
+cookies.txt
+.env
+.env.*
+!.env.example
+
+# yt-dlp scratch
+/tmp/
+yt-dlp-cache/
+
+# --- Node / Expo ------------------------------------------------------------
+node_modules/
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+package-lock.json.bak
+
+# Prebuild output is generated from app.json + plugins; never hand-edited.
+mobile/android/
+mobile/ios/
+
+# --- Build artifacts --------------------------------------------------------
+*.apk
+*.aab
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# --- Editors / OS -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

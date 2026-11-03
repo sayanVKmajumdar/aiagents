@@ -1,0 +1,36 @@
+# Keep generated/secret material out of the repo. Project-specific ignores live
+# in yt-alarm-clock/.gitignore and yt-alarm-clock/mobile/.gitignore-friendly root.
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Credentials / local env
+oauth.json
+browser.json
+headers_auth.json
+cookies.txt
+.env
+.env.*
+
+# Generated native projects (regenerate with `npx expo prebuild`)
+yt-alarm-clock/mobile/android/
+yt-alarm-clock/mobile/ios/
+
+# Build artifacts
+*.apk
+*.aab
+*.jks
+*.keystore
+
+.DS_Store
+.idea/
+.vscode/
