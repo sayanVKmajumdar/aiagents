@@ -12,6 +12,18 @@ const API_KEY_STORAGE = '@yt_alarm_clock_api_key';
  */
 export const DEFAULT_SERVER_URL = 'https://YOUR-DEPLOYED-URL.onrender.com';
 
+/**
+ * Demo/trial builds are compiled with EXPO_PUBLIC_DEMO_MODE=1 (see the
+ * android-trial build profile). In that mode an empty or placeholder backend
+ * URL is not treated as an error: alarms still fire and ring with the bundled
+ * tone, so the app can be installed and tested before a server exists.
+ */
+export const DEMO_MODE =
+  String(process.env.EXPO_PUBLIC_DEMO_MODE || '').toLowerCase() === '1';
+
+/** True when we have a usable backend; DEMO_MODE without one is still "ready". */
+export const canRing = (url) => isConfigured(url) || DEMO_MODE;
+
 // ---------------------------------------------------------------------------
 // Alarms
 // ---------------------------------------------------------------------------

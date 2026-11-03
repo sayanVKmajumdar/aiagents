@@ -16,6 +16,10 @@ import { createAudioPlayer, setAudioModeAsync, setIsAudioActiveAsync } from 'exp
 
 import { fetchAlarmAudio } from './ApiService';
 
+// Bundled tone, used when the backend cannot be reached at all. An alarm that
+// rings boringly beats an alarm that does not ring.
+const FALLBACK_SOUND = require('../../assets/fallback-alarm.wav');
+
 let player = null;
 let currentTrack = null;
 let currentVolume = 1;
@@ -59,9 +63,9 @@ const destroyPlayer = () => {
   player = null;
 };
 
-const ensurePlayer = () => {
+const ensurePlayer = (source = null) => {
   if (!player) {
-    player = createAudioPlayer(null, { updateInterval: 500, keepAudioSessionActive: true });
+    player = createAudioPlayer(source, { updateInterval: 500, keepAudioSessionActive: true });
     player.loop = true;
     player.volume = currentVolume;
   }
@@ -71,35 +75,70 @@ const ensurePlayer = () => {
 /**
  * Play a track (or ask the backend for a random one).
  *
+ * If the backend cannot be reached at all we fall back to the bundled alarm
+ * tone after a few seconds, and report that through `fallback: true` so the
+ * ringing screen can say so. The alarm must never be silent.
+ *
  * @param {object} options
  * @param {{video_id?: string, title?: string, artist?: string}} [options.song]
  * @param {{serverUrl: string, apiKey?: string}} options.config
- * @returns {Promise<{track: object, player: object}>}
+ * @param {boolean} [options.allowFallback]
+ * @returns {Promise<{track: object, player: object, fallback: boolean}>}
  */
-export const play = async ({ song = null, config }) => {
+export const play = async ({ song = null, config, allowFallback = true }) => {
   await configureForAlarm();
 
-  const track = await fetchAlarmAudio(config.serverUrl, {
-    apiKey: config.apiKey,
-    videoId: song?.video_id || null,
-    timeoutMs: 25000,
-  });
+  try {
+    const track = await fetchAlarmAudio(config.serverUrl, {
+      apiKey: config.apiKey,
+      videoId: song?.video_id || null,
+      timeoutMs: 25000,
+    });
 
-  const activePlayer = ensurePlayer();
-  activePlayer.replace({ uri: track.stream_url });
-  currentTrack = track;
+    const activePlayer = ensurePlayer();
+    activePlayer.replace({ uri: track.stream_url });
+    currentTrack = track;
 
-  // A gentle ramp respects sleepy ears while still reaching full volume fast.
-  rampVolume(0.35, 1, 2500);
+    // A gentle ramp respects sleepy ears while still reaching full volume fast.
+    rampVolume(0.35, 1, 2500);
+    activePlayer.play();
+
+    return { track, player: activePlayer, fallback: false };
+  } catch (error) {
+    if (!allowFallback) throw error;
+    console.warn('[audio] stream unavailable, using bundled alarm tone:', error.message);
+    return playFallback(error);
+  }
+};
+
+/**
+ * Ring with the bundled tone instead of a stream. Used when the server is
+ * unreachable (cold Render container, airplane mode, no backend configured).
+ */
+export const playFallback = async (cause = null) => {
+  await configureForAlarm();
+  const activePlayer = ensurePlayer(FALLBACK_SOUND);
+  activePlayer.loop = true;
+  activePlayer.replace(FALLBACK_SOUND);
+
+  currentTrack = {
+    video_id: null,
+    title: 'Offline alarm tone',
+    artist: cause ? 'Backend unreachable' : 'Built-in sound',
+    duration_ms: 0,
+    stream_url: 'local://fallback-alarm.wav',
+  };
+
+  rampVolume(0.4, 1, 2000);
   activePlayer.play();
 
-  return { track, player: activePlayer };
+  return { track: currentTrack, player: activePlayer, fallback: true, cause };
 };
 
 /** Retry with a fresh stream URL (expired googlevideo URLs are common). */
-export const restart = async ({ song = null, config }) => {
+export const restart = async ({ song = null, config, allowFallback = false }) => {
   destroyPlayer();
-  return play({ song, config });
+  return play({ song, config, allowFallback });
 };
 
 export const pause = () => {

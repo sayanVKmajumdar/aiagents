@@ -10,7 +10,8 @@
     "typecheck": "npx --yes typescript@5 tsc --noEmit --allowJs --checkJs --jsx react-jsx --moduleResolution bundler --module esnext --target es2020 App.js \"src/**/*.js\" 2>/dev/null || true",
     "build:apk": "eas build -p android --profile preview",
     "build:prod": "eas build -p android --profile production",
-    "test": "jest --config jest.config.js"
+    "test": "jest --config jest.config.js",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

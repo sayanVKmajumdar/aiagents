@@ -1,0 +1,107 @@
+# Builds an installable Android APK on GitHub's runners (EAS cloud builds need
+# an Expo login; this does not — the APK is unsigned-debug-signed, which is fine
+# for sideloading your own app).
+#
+# Triggers:
+#   - Actions tab -> "Android APK" -> Run workflow   (manual)
+#   - push a tag like v1.0-apk
+#
+# The finished APK is attached to the run as a downloadable artifact AND
+# (for tag builds) published as a GitHub Release asset.
+name: Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      demo_mode:
+        description: 'Trial build: alarms ring with the built-in tone when no backend is set'
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'v*-apk'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install JS dependencies
+        run: npm ci --no-audit --no-fund --legacy-peer-deps
+
+      - name: Unit tests (config plugins)
+        run: npm test
+
+      - name: Prebuild native Android project (applies lockscreen plugins)
+        run: npx expo prebuild -p android --clean --no-install
+
+      - name: Verify the lockscreen flags made it into the manifest
+        run: |
+          set -eu
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          grep -q 'android:showWhenLocked="true"' "$MANIFEST"
+          grep -q 'android:turnScreenOn="true"' "$MANIFEST"
+          grep -q 'USE_FULL_SCREEN_INTENT' "$MANIFEST"
+          grep -q 'SHOW_ALARMS' "$MANIFEST"
+          grep -q 'applyFullScreenAlarmIntent' \
+            node_modules/expo-notifications/android/src/main/java/expo/modules/notifications/notifications/presentation/builders/ExpoNotificationBuilder.kt
+          echo "native alarm flags verified"
+
+      - name: Build release APK
+        env:
+          EXPO_PUBLIC_DEMO_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.demo_mode && '1' || '' }}
+        run: |
+          set -eu
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Collect artifacts
+        run: |
+          set -eu
+          mkdir -p out
+          APK=$(find android/app/build/outputs/apk -name '*.apk' | head -1)
+          echo "found $APK"
+          cp "$APK" out/yt-alarm-trial.apk
+          ( cd out && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt )
+          ls -lh out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yt-alarm-apk
+          path: mobile/out/
+          retention-days: 90
+
+      - name: Publish GitHub Release (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            mobile/out/yt-alarm-*.apk
+            mobile/out/SHA256SUMS.txt
+          body: |
+            Installable Android APK for YT Alarm Clock.
+
+            Sideload it (Chrome → "Install unknown apps" allowed), open it,
+            then either run it as-is (built-in alarm tone) or add your backend
+            URL in ⚙︎ to stream songs from YouTube Music.

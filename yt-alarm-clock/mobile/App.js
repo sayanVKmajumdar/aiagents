@@ -30,6 +30,7 @@ import {
 import { colors, radius, spacing, typography } from './src/theme';
 import { formatClock } from './src/utils/time';
 import {
+  DEMO_MODE,
   createAlarm,
   isConfigured,
   loadAlarms,
@@ -117,7 +118,12 @@ function AlarmApp() {
           });
         }
       } else {
-        setServerStatus({ ok: false, message: 'not configured — open settings' });
+        setServerStatus({
+          ok: false,
+          message: DEMO_MODE
+            ? 'no song server yet — alarms use the built-in tone'
+            : 'not configured — open settings',
+        });
       }
     })();
 
@@ -367,6 +373,14 @@ function AlarmApp() {
         <Text style={styles.fabText}>+  New alarm</Text>
       </Pressable>
 
+      {DEMO_MODE ? (
+        <View style={styles.demoChip}>
+          <Text style={styles.demoChipText}>
+            DEMO BUILD · add a backend URL in ⚙︎ for real songs
+          </Text>
+        </View>
+      ) : null}
+
       {sheet === 'new' ? (
         <TimePickerSheet
           initialAlarm={editingAlarm}
@@ -462,6 +476,21 @@ const styles = StyleSheet.create({
   iconButtonText: {
     color: colors.text,
     fontSize: 20,
+  },
+  demoChip: {
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.md,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.warning,
+  },
+  demoChipText: {
+    ...typography.caption,
+    fontSize: 10,
+    color: colors.warning,
   },
   banner: {
     marginHorizontal: spacing.xl,

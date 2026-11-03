@@ -41,6 +41,7 @@ export default function RingingModal({
   });
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('loading');
+  const [usingFallback, setUsingFallback] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [elapsed, setElapsed] = useState(0);
 
@@ -61,11 +62,12 @@ export default function RingingModal({
       setStatus('loading');
       setError(null);
       try {
-        const { track: fetched } = await AudioService.play({
+        const { track: fetched, fallback } = await AudioService.play({
           song: useSong ? alarm?.song : null,
           config: configRef.current,
         });
         setTrack(fetched);
+        setUsingFallback(Boolean(fallback));
         setStatus('playing');
       } catch (e) {
         setStatus('error');
@@ -146,8 +148,11 @@ export default function RingingModal({
   const requiredSeconds = playback.duration
     ? playback.duration * requiredProgress
     : 0;
-  const listenedEnough =
-    playback.progress >= requiredProgress && Boolean(playback.duration);
+  // A streamed track must be listened to (nearly) all the way through. The
+  // offline tone has no duration, so require a short fixed listen instead.
+  const listenedEnough = usingFallback
+    ? elapsed >= 20
+    : playback.progress >= requiredProgress && Boolean(playback.duration);
   // Escape hatch: 90s after a hard failure the user may leave regardless.
   const escapeHatch = status === 'error' && elapsed > 90;
   const canDismiss = listenedEnough || escapeHatch;
@@ -162,11 +167,13 @@ export default function RingingModal({
     setError(null);
     setStatus('loading');
     try {
-      const { track: fetched } = await AudioService.restart({
+      const { track: fetched, fallback } = await AudioService.restart({
         song: alarm?.song,
-        config,
+        config: configRef.current,
+        allowFallback: true,
       });
       setTrack(fetched);
+      setUsingFallback(Boolean(fallback));
       setStatus('playing');
       startedAtRef.current = Date.now();
     } catch (e) {
@@ -195,6 +202,12 @@ export default function RingingModal({
       <Animated.View style={[styles.badge, { transform: [{ scale: buttonScale }] }]}>
         <Text style={styles.badgeEmoji}>⏰</Text>
       </Animated.View>
+
+      {usingFallback ? (
+        <Text style={styles.fallbackNotice}>
+          Backend unreachable — ringing with the built-in tone.
+        </Text>
+      ) : null}
 
       <View style={styles.trackBlock}>
         <Text style={styles.trackTitle} numberOfLines={2}>
@@ -309,6 +322,12 @@ const styles = StyleSheet.create({
   },
   badgeEmoji: {
     fontSize: 56,
+  },
+  fallbackNotice: {
+    ...typography.caption,
+    color: colors.warning,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
   },
   trackBlock: {
     alignItems: 'center',

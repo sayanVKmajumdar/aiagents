@@ -25,6 +25,16 @@
         "buildType": "app-bundle",
         "image": "latest"
       }
+    },
+    "android-trial": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "image": "latest"
+      },
+      "env": {
+        "EXPO_PUBLIC_DEMO_MODE": "1"
+      }
     }
   },
   "submit": {
